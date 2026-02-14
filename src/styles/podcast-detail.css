@@ -1,0 +1,113 @@
+.podcast-detail-container {
+    min-height: 100vh;
+    background: #0b0215;
+    color: white;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.detail-content {
+    max-width: 1000px;
+    width: 100%;
+    display: flex;
+    gap: 3rem;
+    margin-bottom: 4rem;
+}
+
+.detail-sidebar {
+    flex-shrink: 0;
+    width: 300px;
+}
+
+.detail-thumbnail {
+    width: 100%;
+    aspect-ratio: 1/1;
+    object-fit: cover;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(157, 78, 221, 0.2);
+}
+
+.btn-back-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #a0a0b0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin-bottom: 2rem;
+    font-size: 1rem;
+    transition: color 0.2s;
+}
+
+.btn-back-nav:hover {
+    color: white;
+}
+
+.detail-main {
+    flex: 1;
+}
+
+.detail-title {
+    font-size: 3rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+    line-height: 1.1;
+    background: linear-gradient(to right, #ffffff, #c77dff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.detail-meta {
+    display: flex;
+    gap: 1.5rem;
+    color: #a0a0b0;
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.detail-description {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: #d0d0d0;
+    margin-bottom: 3rem;
+}
+
+.player-sticky-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    padding: 0 2rem 2rem;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.player-wrapper {
+    max-width: 1000px;
+    width: 100%;
+    pointer-events: auto;
+}
+
+@media (max-width: 768px) {
+    .detail-content {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .detail-meta {
+        justify-content: center;
+    }
+}

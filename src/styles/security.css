@@ -1,0 +1,89 @@
+.security-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at top, #3b0a63, #0b0215);
+    color: white;
+    padding: 2rem;
+}
+
+.security-content {
+    width: 100%;
+    max-width: 450px;
+    text-align: center;
+}
+
+.security-icon {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+
+    50% {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+}
+
+.security-title {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.security-subtitle {
+    color: #a0a0b0;
+    margin-bottom: 2.5rem;
+}
+
+.interest-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.interest-tag {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.interest-tag.selected {
+    background: #9d4edd;
+    border-color: #9d4edd;
+    box-shadow: 0 0 10px rgba(157, 78, 221, 0.4);
+}
+
+.btn-finish {
+    background: linear-gradient(90deg, #9d4edd, #5a189a);
+    color: white;
+    border: none;
+    padding: 1rem 3rem;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s;
+    box-shadow: 0 4px 15px rgba(90, 24, 154, 0.4);
+}
+
+.btn-finish:hover {
+    transform: translateY(-2px);
+}
