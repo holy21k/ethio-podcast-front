@@ -1,15 +1,37 @@
-export default function Navbar() {
+import React from 'react';
+import { NavLink } from 'react-router-dom';
+import { Home, Compass, Search, Heart, User } from 'lucide-react';
+import '../styles/navbar.css';
+
+const Navbar = () => {
   return (
     <nav className="navbar">
-      <div className="container nav-row">
-        <div className="nav-left">EthioPodcast</div>
-        <ul className="nav-links">
-          <li><a href="#">Home</a></li>
-          <li><a href="#explore">Explore</a></li>
-          <li><a href="#about">About</a></li>
-        </ul>
-        <button className="cta-btn">Start Listening →</button>
-      </div>
+      <NavLink to="/home" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+        <Home size={24} />
+        <span>Home</span>
+      </NavLink>
+
+      <NavLink to="/discover" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+        <Compass size={24} />
+        <span>Discover</span>
+      </NavLink>
+
+      <NavLink to="/search" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+        <Search size={24} />
+        <span>Search</span>
+      </NavLink>
+
+      <NavLink to="/watchlist" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+        <Heart size={24} />
+        <span>Watchlist</span>
+      </NavLink>
+
+      <NavLink to="/profile" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+        <User size={24} />
+        <span>Profile</span>
+      </NavLink>
     </nav>
-  )
-}
+  );
+};
+
+export default Navbar;

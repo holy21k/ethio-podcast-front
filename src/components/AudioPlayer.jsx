@@ -1,8 +1,9 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX } from 'lucide-react';
+import api from '../api/api';
 import '../styles/audioplayer.css';
 
-const AudioPlayer = ({ src }) => {
+const AudioPlayer = ({ src, podcastId }) => {
     const audioRef = useRef(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
@@ -27,7 +28,13 @@ const AudioPlayer = ({ src }) => {
     };
 
     const handleTimeUpdate = () => {
-        setCurrentTime(audioRef.current.currentTime);
+        const time = audioRef.current.currentTime;
+        setCurrentTime(time);
+
+        // Save position every 30 seconds or so (throttled)
+        if (podcastId && Math.floor(time) % 30 === 0 && time > 0) {
+            api.post(`/user/position/${podcastId}`, { position: time }).catch(() => { });
+        }
     };
 
     const handleLoadedMetadata = () => {
