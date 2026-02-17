@@ -1,62 +1,164 @@
+/* ============================================
+   HOME PAGE STYLES
+   ============================================ */
+
 .home-container {
-    min-height: 100vh;
-    background: #0b0215;
-    color: white;
-    padding: 2rem;
-    padding-bottom: 6rem;
-    /* Space for player if needed later */
+  min-height: 100vh;
+  background: #0a0a1f;
+  color: white;
+  padding: 1.5rem;
+  padding-bottom: 100px; /* Space for bottom navbar */
+  position: relative;
 }
 
 .home-header {
-    margin-bottom: 2rem;
-    background: linear-gradient(180deg, rgba(59, 10, 99, 0.5) 0%, rgba(11, 2, 21, 0) 100%);
-    padding: 2rem;
-    border-radius: 20px;
-    border: 1px solid rgba(157, 78, 221, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
 }
 
-.home-title {
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
+.home-header-left {
+  flex: 1;
+}
+
+.home-greeting {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
 }
 
 .home-subtitle {
-    color: #a0a0b0;
+  font-size: 0.95rem;
+  color: #a8a8b8;
+}
+
+.home-header-right {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.icon-btn {
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.icon-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: #8b5cf6;
+}
+
+.home-section {
+  margin-bottom: 2.5rem;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
 }
 
 .section-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin: 2rem 0 1rem;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
 }
 
-.section-title::before {
-    content: '';
-    display: block;
-    width: 4px;
-    height: 24px;
-    background: #9d4edd;
-    border-radius: 2px;
+.see-all-btn {
+  background: transparent;
+  border: none;
+  color: #8b5cf6;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.see-all-btn:hover {
+  color: #a78bfa;
 }
 
 .podcast-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 1.25rem;
+}
+
+.empty-state {
+  color: #6b7280;
+  font-size: 0.95rem;
+  padding: 2rem;
+  text-align: center;
+  grid-column: 1 / -1;
 }
 
 .loading-state,
 .error-state {
-    text-align: center;
-    padding: 3rem;
-    color: #a0a0b0;
-    font-size: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 1rem;
 }
 
-.error-state {
-    color: #ff6b6b;
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(139, 92, 246, 0.2);
+  border-top-color: #8b5cf6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.error-state button {
+  background: #8b5cf6;
+  color: white;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.error-state button:hover {
+  background: #7c3aed;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .home-container {
+    padding: 1rem;
+    padding-bottom: 90px;
+  }
+
+  .home-greeting {
+    font-size: 1.5rem;
+  }
+
+  .section-title {
+    font-size: 1.25rem;
+  }
+
+  .podcast-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 1rem;
+  }
 }
