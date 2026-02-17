@@ -1,5 +1,6 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Pages
 import Landing from './pages/Landing';
@@ -16,40 +17,43 @@ import History from './pages/History';
 import Profile from './pages/Profile';
 import Categories from './pages/Categories';
 import PodcastDetail from './pages/PodcastDetail';
+import Settings from './pages/Settings';
+import Notifications from './pages/Notifications';
+import Personalization from './pages/Personalization';
 
-import Navbar from './components/Navbar'; // Import Navbar to use inside layout if needed, though pages currently import it
-
-// Layout wrapper for authenticated pages to ensure Navbar is present? 
-// Or pages can include it. user provided architecture had Navbar in components.
-// I will let pages include Navbar for now or simple layout.
-// For now, let's keep it simple as implemented in placeholders.
-
-function App() {
+const App = () => {
   return (
     <Router>
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<Landing />} />
-        <Route path="/entry" element={<Entry />} />
-        <Route path="/onboarding" element={<Onboarding />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-
-        {/* Protected Routes */}
-        <Route element={<ProtectedRoute />}>
+      <ErrorBoundary>
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/entry" element={<Entry />} />
+          <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route path="/security" element={<SecuritySetup />} />
-          <Route path="/home" element={<><Home /><Navbar /></>} />
-          <Route path="/discover" element={<Discover />} />
-          <Route path="/search" element={<Search />} />
-          <Route path="/watchlist" element={<Watchlist />} />
-          <Route path="/history" element={<History />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/categories" element={<Categories />} />
-          <Route path="/podcast/:id" element={<PodcastDetail />} />
-        </Route>
-      </Routes>
+
+          {/* Protected Routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/home" element={<Home />} />
+            <Route path="/discover" element={<Discover />} />
+            <Route path="/search" element={<Search />} />
+            <Route path="/watchlist" element={<Watchlist />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/history" element={<History />} />
+            <Route path="/podcast/:id" element={<PodcastDetail />} />
+            <Route path="/categories" element={<Categories />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/notifications" element={<Notifications />} />
+            <Route path="/personalization" element={<Personalization />} />
+          </Route>
+
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </ErrorBoundary>
     </Router>
   );
-}
+};
 
 export default App;

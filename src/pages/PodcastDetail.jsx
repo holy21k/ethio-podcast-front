@@ -1,8 +1,10 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Clock, Calendar, User, Play, Pause } from 'lucide-react';
-import api from '../api/api';
+import { ArrowLeft, Clock, Calendar, User, Play, Bookmark, Share2 } from 'lucide-react';
+import { getPodcastById, getPlayerData } from '../api';
+import { addToWatchlist, addToHistory } from '../api';
 import AudioPlayer from '../components/AudioPlayer';
+import Navbar from '../components/Navbar';
 import '../styles/podcast-detail.css';
 
 const PodcastDetail = () => {
@@ -11,36 +13,33 @@ const PodcastDetail = () => {
     const [podcast, setPodcast] = useState(null);
     const [loading, setLoading] = useState(true);
     const [playerUrl, setPlayerUrl] = useState(null);
+    const [isInWatchlist, setIsInWatchlist] = useState(false);
 
     useEffect(() => {
         const fetchPodcast = async () => {
             try {
                 setLoading(true);
-                // GET /api/podcasts/:id or /api/player/:id per spec
-                // Spec says: Player Page API: GET /api/player/:id returns streaming_url
-                // Let's try to get details first, then player url or both.
-
-                // Fetch details
-                const detailsRes = await api.get(`/podcasts/${id}`).catch(err => {
-                    console.warn("Failed to fetch details endpoint, trying player endpoint directly");
-                    return null;
-                });
-
+                
+                // Fetch podcast details
+                const detailsResponse = await getPodcastById(id).catch(() => null);
+                
                 // Fetch player stream info
-                const playerRes = await api.get(`/player/${id}`).catch(err => null);
+                const playerResponse = await getPlayerData(id).catch(() => null);
 
-                if (playerRes && playerRes.data.data) {
-                    setPlayerUrl(playerRes.data.data.streaming_url);
-                    // If details failed, maybe playerRes has title/thumbnail too (user spec said it does)
-                    if (!detailsRes) {
-                        setPodcast(playerRes.data.data);
+                if (playerResponse) {
+                    const playerData = playerResponse.data || playerResponse;
+                    setPlayerUrl(playerData.streaming_url);
+                    
+                    if (!detailsResponse) {
+                        setPodcast(playerData);
                     } else {
-                        setPodcast(detailsRes.data.data);
+                        const details = detailsResponse.data || detailsResponse;
+                        setPodcast(details);
                     }
-                } else if (detailsRes) {
-                    setPodcast(detailsRes.data.data);
-                    // If no specific player endpoint content, fallback to audio_url from details
-                    setPlayerUrl(detailsRes.data.data.audio_url || detailsRes.data.data.streaming_url);
+                } else if (detailsResponse) {
+                    const details = detailsResponse.data || detailsResponse;
+                    setPodcast(details);
+                    setPlayerUrl(details.audio_url || details.streaming_url);
                 }
 
             } catch (err) {
@@ -53,86 +52,248 @@ const PodcastDetail = () => {
         fetchPodcast();
     }, [id]);
 
-    // Save history when podcast loads/plays
+    // Save to history when podcast loads
     useEffect(() => {
         if (id && podcast) {
-            api.post('/user/history', { podcastId: id }).catch(console.error);
+            addToHistory(id, podcast).catch(console.error);
         }
     }, [id, podcast]);
 
-    if (loading) return <div className="loading-state">Loading episode...</div>;
-    if (!podcast) return <div className="error-state">Podcast not found</div>;
+    const handleAddToWatchlist = async () => {
+        try {
+            await addToWatchlist(id, podcast);
+            setIsInWatchlist(true);
+        } catch (err) {
+            console.error("Failed to add to watchlist", err);
+        }
+    };
+
+    const handleShare = () => {
+        if (navigator.share) {
+            navigator.share({
+                title: podcast.title,
+                text: `Check out this podcast: ${podcast.title}`,
+                url: window.location.href
+            }).catch(console.error);
+        } else {
+            navigator.clipboard.writeText(window.location.href);
+            alert('Link copied to clipboard!');
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="podcast-detail-container">
+                <div className="loading-state">
+                    <div className="loading-spinner"></div>
+                    <p>Loading episode...</p>
+                </div>
+                <Navbar />
+            </div>
+        );
+    }
+
+    if (!podcast) {
+        return (
+            <div className="podcast-detail-container">
+                <div className="error-state">
+                    <p>Podcast not found</p>
+                    <button onClick={() => navigate(-1)}>Go Back</button>
+                </div>
+                <Navbar />
+            </div>
+        );
+    }
 
     return (
-        <div className="podcast-detail-container pb-32">
-            <Navbar />
-            <div className="detail-content pt-8 px-4 md:px-8 max-w-6xl mx-auto w-full">
-                <div className="detail-sidebar flex flex-col items-center md:items-start">
-                    <button className="mb-6 text-purple-300 hover:text-white flex items-center transition-colors" onClick={() => navigate(-1)}>
-                        <ArrowLeft size={20} className="mr-2" /> Back
-                    </button>
-                    <div className="relative group">
-                        <img
-                            src={podcast.thumbnail || podcast.thumbnail_url}
-                            alt={podcast.title}
-                            className="w-full max-w-[300px] aspect-square object-cover rounded-2xl shadow-2xl shadow-purple-900/50 border-2 border-purple-500/20"
-                        />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl flex items-center justify-center">
-                            <button
-                                onClick={() => setPlayerUrl(podcast.audio_url || podcast.streaming_url)}
-                                className="bg-purple-600 rounded-full p-4 transform hover:scale-110 transition-transform shadow-lg shadow-purple-500/40"
+        <div className="podcast-detail-container">
+            <div className="detail-content">
+                {/* Back Button */}
+                <button className="btn-back-nav" onClick={() => navigate(-1)}>
+                    <ArrowLeft size={20} />
+                    <span>Back</span>
+                </button>
+
+                <div style={{ display: 'flex', gap: '3rem', flexWrap: 'wrap' }}>
+                    {/* Thumbnail */}
+                    <div className="detail-sidebar">
+                        <div style={{ position: 'relative', width: '300px' }}>
+                            <img
+                                src={podcast.thumbnail || podcast.thumbnail_url}
+                                alt={podcast.title}
+                                className="detail-thumbnail"
+                                onError={(e) => {
+                                    e.target.src = 'https://via.placeholder.com/300x300/8b5cf6/ffffff?text=Podcast';
+                                }}
+                            />
+                            <div style={{
+                                position: 'absolute',
+                                inset: 0,
+                                background: 'rgba(0, 0, 0, 0.4)',
+                                opacity: 0,
+                                transition: 'opacity 0.3s ease',
+                                borderRadius: '16px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer'
+                            }}
+                            onMouseOver={(e) => e.currentTarget.style.opacity = 1}
+                            onMouseOut={(e) => e.currentTarget.style.opacity = 0}
+                            onClick={() => setPlayerUrl(podcast.audio_url || podcast.streaming_url || playerUrl)}
                             >
-                                <Play fill="white" size={32} />
+                                <div style={{
+                                    width: '64px',
+                                    height: '64px',
+                                    borderRadius: '50%',
+                                    background: '#8b5cf6',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    boxShadow: '0 8px 24px rgba(139, 92, 246, 0.5)'
+                                }}>
+                                    <Play fill="white" size={32} />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Details */}
+                    <div className="detail-main">
+                        <h1 className="detail-title">{podcast.title}</h1>
+
+                        <div className="detail-meta">
+                            <div className="meta-item">
+                                <User size={18} color="#8b5cf6" />
+                                <span>{podcast.uploader || 'Unknown'}</span>
+                            </div>
+                            {podcast.duration && (
+                                <div className="meta-item">
+                                    <Clock size={18} color="#8b5cf6" />
+                                    <span>{podcast.duration}</span>
+                                </div>
+                            )}
+                            {podcast.created_at && (
+                                <div className="meta-item">
+                                    <Calendar size={18} color="#8b5cf6" />
+                                    <span>{podcast.created_at}</span>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
+                            <button
+                                onClick={() => setPlayerUrl(podcast.audio_url || podcast.streaming_url || playerUrl)}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.75rem',
+                                    background: '#8b5cf6',
+                                    color: 'white',
+                                    border: 'none',
+                                    padding: '1rem 2rem',
+                                    borderRadius: '12px',
+                                    fontSize: '1rem',
+                                    fontWeight: '700',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.3s ease',
+                                    boxShadow: '0 4px 16px rgba(139, 92, 246, 0.4)'
+                                }}
+                                onMouseOver={(e) => {
+                                    e.currentTarget.style.background = '#7c3aed';
+                                    e.currentTarget.style.transform = 'translateY(-2px)';
+                                }}
+                                onMouseOut={(e) => {
+                                    e.currentTarget.style.background = '#8b5cf6';
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                }}
+                            >
+                                <Play fill="white" size={20} />
+                                <span>Play Episode</span>
+                            </button>
+
+                            <button
+                                onClick={handleAddToWatchlist}
+                                disabled={isInWatchlist}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.75rem',
+                                    background: isInWatchlist ? 'rgba(139, 92, 246, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                                    color: 'white',
+                                    border: '1px solid rgba(139, 92, 246, 0.3)',
+                                    padding: '1rem 2rem',
+                                    borderRadius: '12px',
+                                    fontSize: '1rem',
+                                    fontWeight: '600',
+                                    cursor: isInWatchlist ? 'default' : 'pointer',
+                                    transition: 'all 0.3s ease'
+                                }}
+                                onMouseOver={(e) => {
+                                    if (!isInWatchlist) {
+                                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                                    }
+                                }}
+                                onMouseOut={(e) => {
+                                    if (!isInWatchlist) {
+                                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                                    }
+                                }}
+                            >
+                                <Bookmark size={20} fill={isInWatchlist ? '#8b5cf6' : 'none'} />
+                                <span>{isInWatchlist ? 'Saved' : 'Save'}</span>
+                            </button>
+
+                            <button
+                                onClick={handleShare}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.75rem',
+                                    background: 'rgba(255, 255, 255, 0.05)',
+                                    color: 'white',
+                                    border: '1px solid rgba(139, 92, 246, 0.3)',
+                                    padding: '1rem 2rem',
+                                    borderRadius: '12px',
+                                    fontSize: '1rem',
+                                    fontWeight: '600',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.3s ease'
+                                }}
+                                onMouseOver={(e) => {
+                                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                                }}
+                                onMouseOut={(e) => {
+                                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                                }}
+                            >
+                                <Share2 size={20} />
+                                <span>Share</span>
                             </button>
                         </div>
-                    </div>
-                </div>
 
-                <div className="detail-main mt-8 md:mt-12 md:pl-10 flex-1">
-                    <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-purple-400 mb-4 leading-tight">
-                        {podcast.title}
-                    </h1>
-
-                    <div className="flex flex-wrap items-center gap-6 text-gray-400 mb-8">
-                        <div className="flex items-center gap-2 bg-purple-900/20 px-3 py-1.5 rounded-lg border border-purple-500/10">
-                            <User size={18} className="text-purple-400" />
-                            <span className="font-medium text-purple-200">{podcast.uploader}</span>
+                        {/* Description */}
+                        <div className="detail-description">
+                            <h3 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '1rem' }}>
+                                About this Episode
+                            </h3>
+                            <p>{podcast.description || "No description available for this episode."}</p>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <Clock size={18} /> {podcast.duration}
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Calendar size={18} /> {podcast.created_at || 'Just now'}
-                        </div>
-                    </div>
-
-                    <div className="flex gap-4 mb-10">
-                        <button
-                            onClick={() => setPlayerUrl(podcast.audio_url || podcast.streaming_url)}
-                            className="flex items-center gap-3 bg-purple-600 hover:bg-purple-500 text-white px-8 py-3.5 rounded-full font-bold shadow-lg shadow-purple-900/40 transition-all transform hover:-translate-y-1"
-                        >
-                            <Play fill="white" size={20} />
-                            Play Episode
-                        </button>
-                        <button className="flex items-center gap-2 bg-[#1b0c2d] hover:bg-purple-900/30 text-white px-6 py-3.5 rounded-full border border-purple-500/30 transition-colors">
-                            <span className="text-2xl leading-none pb-1">+</span> Subscribe
-                        </button>
-                    </div>
-
-                    <div className="detail-description text-gray-300 leading-relaxed text-lg border-t border-purple-500/10 pt-8">
-                        <h3 className="text-xl font-bold text-white mb-4">About this Episode</h3>
-                        <p>{podcast.description || "No description available for this episode."}</p>
                     </div>
                 </div>
             </div>
 
+            {/* Audio Player */}
             {playerUrl && (
-                <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-4">
-                    <div className="max-w-6xl mx-auto shadow-2xl shadow-purple-900/80 rounded-2xl overflow-hidden">
+                <div className="player-sticky-footer">
+                    <div className="player-wrapper">
                         <AudioPlayer src={playerUrl} podcastId={id} />
                     </div>
                 </div>
             )}
+
+            <Navbar />
         </div>
     );
 };
