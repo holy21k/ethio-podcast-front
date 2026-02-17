@@ -11,14 +11,18 @@ const AudioPlayer = ({ src, podcastId }) => {
     const [volume, setVolume] = useState(1);
     const [isMuted, setIsMuted] = useState(false);
 
+    const isYouTube = src && (src.includes('youtube.com/embed') || src.includes('youtu.be'));
+
     useEffect(() => {
-        if (src) {
+        if (src && !isYouTube) {
             setIsPlaying(true);
             audioRef.current?.play().catch(e => console.error("Autoplay failed:", e));
         }
-    }, [src]);
+    }, [src, isYouTube]);
 
     const togglePlay = () => {
+        if (isYouTube) return; // YouTube iframe handles its own play/pause via UI for now (or need API)
+
         if (isPlaying) {
             audioRef.current.pause();
         } else {
@@ -28,47 +32,79 @@ const AudioPlayer = ({ src, podcastId }) => {
     };
 
     const handleTimeUpdate = () => {
+        if (!audioRef.current) return;
+
         const time = audioRef.current.currentTime;
         setCurrentTime(time);
 
-        // Save position every 30 seconds or so (throttled)
-        if (podcastId && Math.floor(time) % 30 === 0 && time > 0) {
-            api.post(`/user/position/${podcastId}`, { position: time }).catch(() => { });
+        // Save position every 15 seconds (throttled)
+        // Spec says: POST /api/user/history, body: { podcastId, position }
+        if (podcastId && Math.floor(time) % 15 === 0 && time > 0) {
+            api.post('/user/history', {
+                podcastId,
+                position: Math.floor(time)
+            }).catch(() => { });
         }
     };
 
     const handleLoadedMetadata = () => {
-        setDuration(audioRef.current.duration);
+        if (audioRef.current) {
+            setDuration(audioRef.current.duration);
+        }
     };
 
     const handleSeek = (e) => {
+        if (isYouTube || !audioRef.current) return;
         const rect = e.currentTarget.getBoundingClientRect();
         const percent = (e.clientX - rect.left) / rect.width;
         audioRef.current.currentTime = percent * duration;
     };
 
     const handleVolumeChange = (e) => {
+        if (isYouTube) return;
         const newVolume = parseFloat(e.target.value);
         setVolume(newVolume);
-        audioRef.current.volume = newVolume;
+        if (audioRef.current) {
+            audioRef.current.volume = newVolume;
+        }
         setIsMuted(newVolume === 0);
     };
 
     const toggleMute = () => {
+        if (isYouTube) return;
         if (isMuted) {
-            audioRef.current.volume = volume || 1;
+            if (audioRef.current) audioRef.current.volume = volume || 1;
             setIsMuted(false);
         } else {
-            audioRef.current.volume = 0;
+            if (audioRef.current) audioRef.current.volume = 0;
             setIsMuted(true);
         }
     };
 
     const formatTime = (time) => {
+        if (!time) return "0:00";
         const minutes = Math.floor(time / 60);
         const seconds = Math.floor(time % 60);
         return `${minutes}:${seconds.toString().padStart(2, '0')}`;
     };
+
+    if (!src) return null;
+
+    if (isYouTube) {
+        return (
+            <div className="audio-player-container youtube-player">
+                <iframe
+                    width="100%"
+                    height="200"
+                    src={`${src}?autoplay=1`}
+                    title="YouTube video player"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                ></iframe>
+            </div>
+        );
+    }
 
     return (
         <div className="audio-player-container">
