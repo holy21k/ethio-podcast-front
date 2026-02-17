@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/entry.css';
 
@@ -7,23 +6,31 @@ const Entry = () => {
 
     return (
         <div className="entry-container">
-            <div className="entry-illustration-placeholder">
-                🎧
+            <div className="entry-header">
+                <span className="entry-logo">EthioPodcast</span>
+                <button className="entry-skip" onClick={() => navigate('/login')}>
+                    Skip
+                </button>
             </div>
 
-            <h1 className="entry-title">EthioPodcast</h1>
+            <div className="entry-content">
+                <div className="entry-orb-container">
+                    <div className="entry-orb-glow"></div>
+                    <div className="entry-orb">
+                        <div className="entry-orb-icon">🎙️</div>
+                    </div>
+                </div>
 
-            <p className="entry-description">
-                Listen to the best Ethiopian podcasts.
-                Discover voices, stories, and ideas that matter to you.
-            </p>
+                <h1 className="entry-title">
+                    Listen to the best<br />
+                    Ethiopian podcasts every day with<br />
+                    EthioPodcast now!
+                </h1>
 
-            <button
-                className="entry-next-btn"
-                onClick={() => navigate('/onboarding')}
-            >
-                Next
-            </button>
+                <button className="entry-next-btn" onClick={() => navigate('/onboarding')}>
+                    Next
+                </button>
+            </div>
         </div>
     );
 };

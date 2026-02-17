@@ -1,22 +1,22 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/onboarding.css';
 
 const onboardingData = [
     {
         title: "Listen to the best",
-        description: "Access thousands of Ethiopian podcasts. From daily news to deep cultural stories, we have it all.",
+        description: "Access thousands of Ethiopian podcasts every day with EthioPodcast now!",
         icon: "🎙️"
     },
     {
         title: "Find your favorites",
-        description: "Follow your favorite creators, create playlists, and discover new voices recommended just for you.",
-        icon: "🔍"
+        description: "Follow your favorite creators and discover new voices recommended just for you.",
+        icon: "💡"
     },
     {
         title: "Download & Subscribe",
         description: "Never miss an episode. Download for offline listening and get notified when new episodes drop.",
-        icon: "💾"
+        icon: "❤️"
     }
 ];
 
@@ -32,21 +32,16 @@ const Onboarding = () => {
         }
     };
 
-    const handleBack = () => {
-        if (currentStep > 0) {
-            setCurrentStep(prev => prev - 1);
-        } else {
-            navigate('/entry');
-        }
-    };
-
     const currentData = onboardingData[currentStep];
 
     return (
         <div className="onboarding-container">
-            <div className="onboarding-content" key={currentStep}>
-                <div className="onboarding-illustration">
-                    {currentData.icon}
+            <div className="onboarding-content">
+                <div className="onboarding-orb-container">
+                    <div className="onboarding-orb-glow"></div>
+                    <div className="onboarding-orb">
+                        <div className="onboarding-orb-icon">{currentData.icon}</div>
+                    </div>
                 </div>
 
                 <h2 className="onboarding-title">{currentData.title}</h2>
@@ -56,19 +51,14 @@ const Onboarding = () => {
                     {onboardingData.map((_, index) => (
                         <div
                             key={index}
-                            className={`dot ${index === currentStep ? 'active' : ''}`}
+                            className={`onboarding-dot ${index === currentStep ? 'active' : ''}`}
                         />
                     ))}
                 </div>
 
-                <div className="onboarding-actions">
-                    <button className="btn-nav btn-back" onClick={handleBack}>
-                        {currentStep === 0 ? 'Back' : 'Previous'}
-                    </button>
-                    <button className="btn-nav btn-next" onClick={handleNext}>
-                        {currentStep === onboardingData.length - 1 ? 'Get Started' : 'Next'}
-                    </button>
-                </div>
+                <button className="onboarding-next-btn" onClick={handleNext}>
+                    {currentStep === onboardingData.length - 1 ? 'Get Started' : 'Next'}
+                </button>
             </div>
         </div>
     );

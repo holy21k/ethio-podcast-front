@@ -1,15 +1,28 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import api from '../api/api';
+import { signInWithGoogle } from '../api/auth';
 import '../styles/login.css';
 
 const Login = () => {
     const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+
+    const handleGoogleLogin = async () => {
+        try {
+            setLoading(true);
+            setError('');
+            await signInWithGoogle();
+            navigate('/home');
+        } catch (error) {
+            console.error("Google Sign-In Error:", error);
+            setError("Failed to sign in with Google.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -17,75 +30,75 @@ const Login = () => {
         setError('');
 
         try {
-            const response = await api.post('/auth/login', { email, password });
-
-            if (response.data.token) {
-                localStorage.setItem('token', response.data.token);
-                if (response.data.user) {
-                    localStorage.setItem('user', JSON.stringify(response.data.user));
-                }
-                navigate('/home');
-            } else {
-                // Fallback for some APIs that might return different structure
-                // If detailed structure is { status: "success", data: { token: ... } }
-                const token = response.data.data?.token || response.data.token;
-                if (token) {
-                    localStorage.setItem('token', token);
-                    navigate('/home');
-                } else {
-                    setError('Login failed: No token received');
-                }
-            }
+            // Import signInWithEmail from auth API
+            const { signInWithEmail } = await import('../api/auth');
+            await signInWithEmail(email, password);
+            navigate('/home');
         } catch (err) {
             console.error('Login error:', err);
-            setError(err.response?.data?.message || 'Failed to login. Please check your credentials.');
+            setError('Failed to login. Please check your credentials.');
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="login-container">
-            <div className="login-content">
-                <div className="login-icon">🎙️</div>
-                <h2 className="login-title">Welcome Back</h2>
-                <p className="login-subtitle">Sign in to continue listening</p>
+        <div className="auth-container">
+            <div className="auth-content">
+                <div className="auth-orb-container">
+                    <div className="auth-orb-glow"></div>
+                    <div className="auth-orb">
+                        <div className="auth-orb-icon">💡</div>
+                    </div>
+                </div>
 
-                {error && <div className="text-red-500 mb-4 bg-red-500/10 p-2 rounded text-sm">{error}</div>}
+                <h2 className="auth-title">Let's you in</h2>
+
+                {error && <div className="auth-error">{error}</div>}
+
+                <button
+                    onClick={handleGoogleLogin}
+                    className="auth-google-btn"
+                    disabled={loading}
+                >
+                    <img 
+                        src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" 
+                        alt="Google" 
+                        className="google-icon"
+                    />
+                    Continue with Google
+                </button>
+
+                <div className="auth-divider">
+                    <span>or</span>
+                </div>
 
                 <form className="auth-form" onSubmit={handleLogin}>
-                    <div className="form-group">
-                        <label>Email Address</label>
-                        <input
-                            type="email"
-                            className="form-input"
-                            placeholder="name@example.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
-                    </div>
+                    <input
+                        type="email"
+                        className="auth-input"
+                        placeholder="Email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                    />
 
-                    <div className="form-group">
-                        <label>Password</label>
-                        <input
-                            type="password"
-                            className="form-input"
-                            placeholder="••••••••"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
-                    </div>
+                    <input
+                        type="password"
+                        className="auth-input"
+                        placeholder="Password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                    />
 
-                    <button type="submit" className="btn-login">
-                        Sign In
+                    <button type="submit" className="auth-submit-btn" disabled={loading}>
+                        {loading ? 'Signing In...' : 'Sign in'}
                     </button>
                 </form>
 
                 <div className="auth-footer">
-                    Don't have an account?
-                    <Link to="/register" className="auth-link">Sign Up</Link>
+                    Don't have an account? <Link to="/register" className="auth-link">Sign up</Link>
                 </div>
             </div>
         </div>

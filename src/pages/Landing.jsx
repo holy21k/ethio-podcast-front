@@ -1,4 +1,4 @@
-import Navbar from '../components/Navbar.jsx'
+import LandingNavbar from '../components/LandingNavbar.jsx'
 import Hero from '../components/Hero.jsx'
 import Features from '../components/Features.jsx'
 import About from '../components/About.jsx'
@@ -9,7 +9,7 @@ import '../styles/landing.css'
 export default function Landing() {
   return (
     <div className="landing">
-      <Navbar />
+      <LandingNavbar />
       <Hero />
       <Features />
       <About />

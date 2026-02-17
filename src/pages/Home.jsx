@@ -1,11 +1,13 @@
-
-import React, { useEffect, useState } from 'react';
-import api from '../api/api';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { getHomeData } from '../api';
 import PodcastCard from '../components/PodcastCard';
 import Navbar from '../components/Navbar';
+import { Bell, User } from 'lucide-react';
 import '../styles/home.css';
 
 const Home = () => {
+    const navigate = useNavigate();
     const [data, setData] = useState({ trending: [], today: [], yesterday: [] });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -14,24 +16,13 @@ const Home = () => {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                // api.get('/home') should return { trending, recent_today, recent_yesterday } per spec
-                const response = await api.get('/home');
+                const response = await getHomeData();
 
-                if (response.data.data) {
-                    // Map backend response structure to our state
-                    setData({
-                        trending: response.data.data.trending || [],
-                        today: response.data.data.recent_today || [],
-                        yesterday: response.data.data.recent_yesterday || []
-                    });
-                } else {
-                    // Fallback or direct structure
-                    setData({
-                        trending: response.data.trending || [],
-                        today: response.data.recent_today || [],
-                        yesterday: response.data.recent_yesterday || []
-                    });
-                }
+                setData({
+                    trending: response.data.trending || [],
+                    today: response.data.recent_today || [],
+                    yesterday: response.data.recent_yesterday || []
+                });
             } catch (err) {
                 console.error("Failed to fetch home data:", err);
                 setError("Could not load podcasts.");
@@ -43,65 +34,102 @@ const Home = () => {
         fetchData();
     }, []);
 
-    if (loading) return <div className="loading-state">Loading podcasts...</div>;
-    if (error) return <div className="error-state">{error}</div>;
+    if (loading) {
+        return (
+            <div className="home-container">
+                <div className="loading-state">
+                    <div className="loading-spinner"></div>
+                    <p>Loading podcasts...</p>
+                </div>
+                <Navbar />
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="home-container">
+                <div className="error-state">
+                    <p>{error}</p>
+                    <button onClick={() => window.location.reload()}>Retry</button>
+                </div>
+                <Navbar />
+            </div>
+        );
+    }
 
     return (
-        <div className="home-container pb-24">
+        <div className="home-container">
             <div className="home-header">
-                <h1 className="home-title">Discover</h1>
-                <p className="home-subtitle">Explore the best Ethiopian podcasts</p>
+                <div className="home-header-left">
+                    <h1 className="home-greeting">Hello 👋</h1>
+                    <p className="home-subtitle">What do you want to listen to today?</p>
+                </div>
+                <div className="home-header-right">
+                    <button className="icon-btn" onClick={() => navigate('/notifications')}>
+                        <Bell size={24} />
+                    </button>
+                    <button className="icon-btn" onClick={() => navigate('/profile')}>
+                        <User size={24} />
+                    </button>
+                </div>
             </div>
 
-            <section>
-                <h2 className="section-title">Trending Now</h2>
+            <section className="home-section">
+                <div className="section-header">
+                    <h2 className="section-title">Trending Now</h2>
+                    <button className="see-all-btn" onClick={() => navigate('/discover')}>
+                        See all
+                    </button>
+                </div>
                 <div className="podcast-grid">
                     {data.trending.length > 0 ? (
-                        data.trending.map(podcast => (
+                        data.trending.slice(0, 6).map(podcast => (
                             <PodcastCard key={podcast.id} podcast={podcast} />
                         ))
                     ) : (
-                        <p className="text-gray-500">No trending podcasts found.</p>
+                        <p className="empty-state">No trending podcasts found.</p>
                     )}
                 </div>
             </section>
 
-            <section>
-                <h2 className="section-title">Today's Podcasts</h2>
+            <section className="home-section">
+                <div className="section-header">
+                    <h2 className="section-title">Today's Episodes</h2>
+                    <button className="see-all-btn" onClick={() => navigate('/discover')}>
+                        See all
+                    </button>
+                </div>
                 <div className="podcast-grid">
                     {data.today.length > 0 ? (
-                        data.today.map(podcast => (
+                        data.today.slice(0, 6).map(podcast => (
                             <PodcastCard key={podcast.id} podcast={podcast} />
                         ))
                     ) : (
-                        <p className="text-gray-500">No podcasts released today yet.</p>
+                        <p className="empty-state">No new episodes today.</p>
                     )}
                 </div>
             </section>
 
-            <section>
-                <h2 className="section-title">Yesterday</h2>
+            <section className="home-section">
+                <div className="section-header">
+                    <h2 className="section-title">Recent</h2>
+                    <button className="see-all-btn" onClick={() => navigate('/discover')}>
+                        See all
+                    </button>
+                </div>
                 <div className="podcast-grid">
                     {data.yesterday.length > 0 ? (
-                        data.yesterday.map(podcast => (
+                        data.yesterday.slice(0, 6).map(podcast => (
                             <PodcastCard key={podcast.id} podcast={podcast} />
                         ))
                     ) : (
-                        <p className="text-gray-500">No podcasts from yesterday.</p>
+                        <p className="empty-state">No recent podcasts.</p>
                     )}
                 </div>
             </section>
 
-            {/* Navbar is rendered by App.jsx layout wrapper if we changed it, 
-          but previously I kept it in App.jsx route. 
-          The ProtectedRoute layout in App.jsx renders <Home /><Navbar /> so we don't need it here.
-          Wait, I put <Navbar /> in App.jsx for Home route only?
-          Let's check App.jsx: <Route path="/home" element={<><Home /><Navbar /></>} />
-          But for other pages I didn't add it in App.jsx (e.g. Discover).
-          I should be consistent.
-          Discover placeholder has <Navbar />.
-          To be safe, I will NOT include Navbar here since App.jsx has it for /home.
-       */}
+            <Navbar />
         </div>
     );
 };

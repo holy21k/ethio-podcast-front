@@ -65,36 +65,70 @@ const PodcastDetail = () => {
 
     return (
         <div className="podcast-detail-container pb-32">
-            <div className="detail-content">
-                <div className="detail-sidebar">
-                    <button className="btn-back-nav" onClick={() => navigate(-1)}>
-                        <ArrowLeft size={20} /> Back
+            <Navbar />
+            <div className="detail-content pt-8 px-4 md:px-8 max-w-6xl mx-auto w-full">
+                <div className="detail-sidebar flex flex-col items-center md:items-start">
+                    <button className="mb-6 text-purple-300 hover:text-white flex items-center transition-colors" onClick={() => navigate(-1)}>
+                        <ArrowLeft size={20} className="mr-2" /> Back
                     </button>
-                    <img
-                        src={podcast.thumbnail || podcast.thumbnail_url}
-                        alt={podcast.title}
-                        className="detail-thumbnail"
-                    />
+                    <div className="relative group">
+                        <img
+                            src={podcast.thumbnail || podcast.thumbnail_url}
+                            alt={podcast.title}
+                            className="w-full max-w-[300px] aspect-square object-cover rounded-2xl shadow-2xl shadow-purple-900/50 border-2 border-purple-500/20"
+                        />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl flex items-center justify-center">
+                            <button
+                                onClick={() => setPlayerUrl(podcast.audio_url || podcast.streaming_url)}
+                                className="bg-purple-600 rounded-full p-4 transform hover:scale-110 transition-transform shadow-lg shadow-purple-500/40"
+                            >
+                                <Play fill="white" size={32} />
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
-                <div className="detail-main">
-                    <h1 className="detail-title">{podcast.title}</h1>
+                <div className="detail-main mt-8 md:mt-12 md:pl-10 flex-1">
+                    <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-purple-400 mb-4 leading-tight">
+                        {podcast.title}
+                    </h1>
 
-                    <div className="detail-meta">
-                        <span className="meta-item"><User size={18} /> {podcast.uploader}</span>
-                        <span className="meta-item"><Clock size={18} /> {podcast.duration}</span>
-                        <span className="meta-item"><Calendar size={18} /> {podcast.created_at || 'Just now'}</span>
+                    <div className="flex flex-wrap items-center gap-6 text-gray-400 mb-8">
+                        <div className="flex items-center gap-2 bg-purple-900/20 px-3 py-1.5 rounded-lg border border-purple-500/10">
+                            <User size={18} className="text-purple-400" />
+                            <span className="font-medium text-purple-200">{podcast.uploader}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Clock size={18} /> {podcast.duration}
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Calendar size={18} /> {podcast.created_at || 'Just now'}
+                        </div>
                     </div>
 
-                    <div className="detail-description">
+                    <div className="flex gap-4 mb-10">
+                        <button
+                            onClick={() => setPlayerUrl(podcast.audio_url || podcast.streaming_url)}
+                            className="flex items-center gap-3 bg-purple-600 hover:bg-purple-500 text-white px-8 py-3.5 rounded-full font-bold shadow-lg shadow-purple-900/40 transition-all transform hover:-translate-y-1"
+                        >
+                            <Play fill="white" size={20} />
+                            Play Episode
+                        </button>
+                        <button className="flex items-center gap-2 bg-[#1b0c2d] hover:bg-purple-900/30 text-white px-6 py-3.5 rounded-full border border-purple-500/30 transition-colors">
+                            <span className="text-2xl leading-none pb-1">+</span> Subscribe
+                        </button>
+                    </div>
+
+                    <div className="detail-description text-gray-300 leading-relaxed text-lg border-t border-purple-500/10 pt-8">
+                        <h3 className="text-xl font-bold text-white mb-4">About this Episode</h3>
                         <p>{podcast.description || "No description available for this episode."}</p>
                     </div>
                 </div>
             </div>
 
             {playerUrl && (
-                <div className="player-sticky-footer">
-                    <div className="player-wrapper">
+                <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-4">
+                    <div className="max-w-6xl mx-auto shadow-2xl shadow-purple-900/80 rounded-2xl overflow-hidden">
                         <AudioPlayer src={playerUrl} podcastId={id} />
                     </div>
                 </div>

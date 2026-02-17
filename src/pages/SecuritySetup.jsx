@@ -1,52 +1,94 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { updateUserInterests } from '../api/user';
 import '../styles/security.css';
 
 const INTERESTS = [
-    "History", "Tech", "Culture", "News", "Business",
-    "Comedy", "Music", "Sports", "Education"
+    { name: "History", icon: "📚" },
+    { name: "Technology", icon: "💻" },
+    { name: "Culture", icon: "🎭" },
+    { name: "News", icon: "📰" },
+    { name: "Business", icon: "💼" },
+    { name: "Comedy", icon: "😂" },
+    { name: "Music", icon: "🎵" },
+    { name: "Sports", icon: "⚽" },
+    { name: "Education", icon: "🎓" },
+    { name: "Politics", icon: "🏛️" },
+    { name: "Religion", icon: "🕌" },
+    { name: "Society", icon: "👥" }
 ];
 
 const SecuritySetup = () => {
     const navigate = useNavigate();
     const [selectedInterests, setSelectedInterests] = useState([]);
+    const [loading, setLoading] = useState(false);
 
-    const toggleInterest = (interest) => {
-        if (selectedInterests.includes(interest)) {
-            setSelectedInterests(prev => prev.filter(i => i !== interest));
+    const toggleInterest = (interestName) => {
+        if (selectedInterests.includes(interestName)) {
+            setSelectedInterests(prev => prev.filter(i => i !== interestName));
         } else {
-            setSelectedInterests(prev => [...prev, interest]);
+            setSelectedInterests(prev => [...prev, interestName]);
         }
     };
 
-    const handleFinish = () => {
-        // Navigate to Home after setup
+    const handleFinish = async () => {
+        try {
+            setLoading(true);
+            // Save interests to backend
+            await updateUserInterests(selectedInterests);
+            navigate('/home');
+        } catch (error) {
+            console.error('Failed to save interests:', error);
+            // Still navigate even if save fails
+            navigate('/home');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSkip = () => {
         navigate('/home');
     };
 
     return (
         <div className="security-container">
             <div className="security-content">
-                <div className="security-icon">🛡️</div>
-
-                <h2 className="security-title">Personalize Experience</h2>
-                <p className="security-subtitle">Select topics you are interested in</p>
+                <div className="security-header">
+                    <h2 className="security-title">Choose your interests</h2>
+                    <p className="security-subtitle">
+                        Select topics you're interested in to personalize your experience
+                    </p>
+                </div>
 
                 <div className="interest-grid">
                     {INTERESTS.map(interest => (
                         <div
-                            key={interest}
-                            className={`interest-tag ${selectedInterests.includes(interest) ? 'selected' : ''}`}
-                            onClick={() => toggleInterest(interest)}
+                            key={interest.name}
+                            className={`interest-card ${selectedInterests.includes(interest.name) ? 'selected' : ''}`}
+                            onClick={() => toggleInterest(interest.name)}
                         >
-                            {interest}
+                            <div className="interest-icon">{interest.icon}</div>
+                            <div className="interest-name">{interest.name}</div>
                         </div>
                     ))}
                 </div>
 
-                <button className="btn-finish" onClick={handleFinish}>
-                    Finish Setup
-                </button>
+                <div className="security-actions">
+                    <button 
+                        className="btn-skip" 
+                        onClick={handleSkip}
+                        disabled={loading}
+                    >
+                        Skip
+                    </button>
+                    <button 
+                        className="btn-finish" 
+                        onClick={handleFinish}
+                        disabled={loading || selectedInterests.length === 0}
+                    >
+                        {loading ? 'Saving...' : 'Continue'}
+                    </button>
+                </div>
             </div>
         </div>
     );
