@@ -260,6 +260,16 @@
     padding: 1rem;
   }
 
+  .search-input {
+    font-size: 0.9rem;
+    padding: 0.75rem 3rem 0.75rem 2.75rem;
+  }
+
+  .tab-btn {
+    font-size: 0.85rem;
+    padding: 0.65rem 0.5rem;
+  }
+
   .authors-grid {
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
     gap: 1rem;
@@ -272,5 +282,73 @@
 
   .author-name-discover {
     font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .discover-container {
+    padding-bottom: 90px;
+  }
+
+  .discover-header {
+    padding: 0.875rem;
+  }
+
+  .discover-content {
+    padding: 0.875rem;
+  }
+
+  .search-bar {
+    margin-bottom: 1rem;
+  }
+
+  .search-input {
+    font-size: 0.85rem;
+    padding: 0.7rem 2.75rem 0.7rem 2.5rem;
+    border-radius: 12px;
+  }
+
+  .search-icon {
+    left: 0.75rem;
+  }
+
+  .filter-btn {
+    right: 0.5rem;
+    padding: 0.4rem;
+  }
+
+  .tab-btn {
+    font-size: 0.8rem;
+    padding: 0.6rem 0.4rem;
+    gap: 0.35rem;
+  }
+
+  .tab-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .authors-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 0.875rem;
+  }
+
+  .author-card-discover {
+    padding: 1rem 0.75rem;
+  }
+
+  .author-avatar-discover {
+    width: 60px;
+    height: 60px;
+    border-width: 2px;
+  }
+
+  .author-name-discover {
+    font-size: 0.8rem;
+  }
+
+  .category-tag {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.875rem;
   }
 }

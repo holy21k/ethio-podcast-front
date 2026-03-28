@@ -490,3 +490,62 @@
     right: 0.5rem;
   }
 }
+/* ============================================
+   RESPONSIVE FIXES
+   ============================================ */
+
+/* Fix authors grid on ALL screen sizes - always horizontal scroll */
+.authors-grid {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  gap: 1.25rem;
+  padding-bottom: 0.75rem;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.authors-grid::-webkit-scrollbar {
+  display: none;
+}
+
+.author-card {
+  flex-shrink: 0 !important;
+  min-width: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Fix hero section on small phones */
+@media (max-width: 380px) {
+  .hero-section {
+    height: 260px;
+  }
+
+  .hero-thumb.active {
+    width: 100px;
+    height: 135px;
+  }
+
+  .hero-thumb {
+    width: 50px;
+    height: 70px;
+  }
+
+  .hero-thumbnails {
+    gap: 0.5rem;
+  }
+
+  .hero-play-btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
+  }
+
+  .hero-play-icon {
+    width: 36px;
+    height: 36px;
+  }
+}
