@@ -1,45 +1,43 @@
 import axios from 'axios';
 import { auth } from '../services/firebase';
 
-// Base API configuration
 const api = axios.create({
-    baseURL: 'http://localhost:3000/api',
+    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api',
     headers: {
         'Content-Type': 'application/json',
     },
 });
 
-// Request interceptor - Attach auth token
-api.interceptors.request.use(async config => {
-    let token = localStorage.getItem('authToken');
-
-    // Check if Firebase has a current user and try to get a fresh token
-    if (auth.currentUser) {
-        try {
-            token = await auth.currentUser.getIdToken();
+api.interceptors.request.use(async (config) => {
+    try {
+        if (auth.currentUser) {
+            const token = await auth.currentUser.getIdToken(false);
             localStorage.setItem('authToken', token);
-        } catch (error) {
-            console.error("Error refreshing token:", error);
+            config.headers.Authorization = `Bearer ${token}`;
+        } else {
+            const stored = localStorage.getItem('authToken');
+            if (stored) {
+                config.headers.Authorization = `Bearer ${stored}`;
+            }
+        }
+    } catch (error) {
+        console.error('Token attach error:', error);
+        const stored = localStorage.getItem('authToken');
+        if (stored) {
+            config.headers.Authorization = `Bearer ${stored}`;
         }
     }
-
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
     return config;
-}, error => {
+}, (error) => {
     return Promise.reject(error);
 });
 
-// Response interceptor - Handle errors globally
 api.interceptors.response.use(
-    response => response,
-    error => {
+    (response) => response,
+    (error) => {
         if (error.response?.status === 401) {
-            // Token expired or invalid
             localStorage.removeItem('authToken');
-            // Optionally redirect to login
-            // window.location.href = '/login';
+            localStorage.removeItem('user');
         }
         return Promise.reject(error);
     }

@@ -1,21 +1,19 @@
 import api from './config';
 import { auth, googleProvider } from '../services/firebase';
-import { 
-    signInWithPopup, 
+import {
+    signInWithPopup,
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
+    updateProfile,
     signOut as firebaseSignOut,
     sendPasswordResetEmail as firebaseSendPasswordResetEmail
 } from 'firebase/auth';
 
-// Google Sign-In
 export const signInWithGoogle = async () => {
     try {
         const result = await signInWithPopup(auth, googleProvider);
         const idToken = await result.user.getIdToken();
         localStorage.setItem('authToken', idToken);
-        
-        // Verify with backend
         const response = await api.get('/auth/login');
         return response.data;
     } catch (error) {
@@ -24,14 +22,11 @@ export const signInWithGoogle = async () => {
     }
 };
 
-// Email/Password Sign-In
 export const signInWithEmail = async (email, password) => {
     try {
         const result = await signInWithEmailAndPassword(auth, email, password);
         const idToken = await result.user.getIdToken();
         localStorage.setItem('authToken', idToken);
-        
-        // Verify with backend
         const response = await api.get('/auth/login');
         return response.data;
     } catch (error) {
@@ -40,19 +35,14 @@ export const signInWithEmail = async (email, password) => {
     }
 };
 
-// Email/Password Registration
 export const registerWithEmail = async (email, password, displayName) => {
     try {
         const result = await createUserWithEmailAndPassword(auth, email, password);
+        if (displayName) {
+            await updateProfile(result.user, { displayName });
+        }
         const idToken = await result.user.getIdToken();
         localStorage.setItem('authToken', idToken);
-        
-        // Update profile if displayName provided
-        if (displayName) {
-            await result.user.updateProfile({ displayName });
-        }
-        
-        // Verify with backend
         const response = await api.get('/auth/login');
         return response.data;
     } catch (error) {
@@ -61,24 +51,23 @@ export const registerWithEmail = async (email, password, displayName) => {
     }
 };
 
-// Sign Out
 export const signOut = async () => {
     try {
         await firebaseSignOut(auth);
         localStorage.removeItem('authToken');
+        localStorage.removeItem('user');
     } catch (error) {
         console.error('Sign-out error:', error);
         throw error;
     }
 };
 
-// Get current user info
 export const getCurrentUser = async () => {
     const response = await api.get('/auth/login');
     return response.data;
 };
 
-// Send password reset email
+// Firebase Client SDK handles this directly — no backend needed
 export const sendPasswordResetEmail = async (email) => {
     try {
         await firebaseSendPasswordResetEmail(auth, email);
@@ -89,16 +78,40 @@ export const sendPasswordResetEmail = async (email) => {
     }
 };
 
-// Change password (for logged-in users)
-export const changePassword = async (currentPassword, newPassword) => {
-    const response = await api.post('/auth/change-password', {
-        currentPassword,
-        newPassword
-    });
+export const changePassword = async (newPassword) => {
+    const response = await api.post('/auth/change-password', { newPassword });
     return response.data;
 };
 
-// Check if user is authenticated
 export const isAuthenticated = () => {
     return !!localStorage.getItem('authToken') && !!auth.currentUser;
+};
+
+// File → base64 → POST to backend → backend uploads to Supabase → returns public URL
+export const uploadProfilePhoto = async (file) => {
+    return new Promise((resolve, reject) => {
+        if (!file.type.startsWith('image/')) {
+            return reject(new Error('File must be an image'));
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            return reject(new Error('Image must be under 5MB'));
+        }
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const base64Image = e.target.result;
+                const response = await api.post('/user/upload-photo', { base64Image });
+                resolve(response.data);
+            } catch (err) {
+                reject(err);
+            }
+        };
+        reader.onerror = () => reject(new Error('Failed to read file'));
+        reader.readAsDataURL(file);
+    });
+};
+
+export const deleteProfilePhoto = async () => {
+    const response = await api.delete('/user/photo');
+    return response.data;
 };
