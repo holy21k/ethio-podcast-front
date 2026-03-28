@@ -14,42 +14,57 @@ const Profile = () => {
     useEffect(() => {
         const fetchProfile = async () => {
             try {
-                // Get Firebase user first
                 const currentUser = auth.currentUser;
-                if (currentUser) {
-                    setProfile({
-                        name: currentUser.displayName || 'User',
-                        email: currentUser.email,
-                        avatar: currentUser.photoURL || `https://ui-avatars.com/api/?name=${currentUser.displayName || 'User'}&background=8b5cf6&color=fff&size=256`
-                    });
+                if (!currentUser) {
+                    navigate('/login');
+                    return;
                 }
 
-                // Try to get additional profile data from backend
-                const response = await getUserProfile();
-                if (response) {
+                setProfile({
+                    name: currentUser.displayName || 'User',
+                    email: currentUser.email,
+                    avatar: currentUser.photoURL ||
+                        `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.displayName || 'User')}&background=8b5cf6&color=fff&size=256`,
+                    bio: '',
+                    interests: []
+                });
+
+                try {
+                    const response = await getUserProfile();
+                    const backendProfile =
+                        response?.data?.profile ||
+                        response?.data ||
+                        response;
+
                     setProfile(prev => ({
                         ...prev,
-                        ...response
+                        name: backendProfile.displayName || prev.name,
+                        bio: backendProfile.bio || prev.bio,
+                        interests: backendProfile.interests || prev.interests,
+                        avatar: backendProfile.photoURL || prev.avatar
                     }));
+                } catch (backendErr) {
+                    console.log('Backend profile fallback to Firebase data:', backendErr.message);
                 }
             } catch (err) {
-                console.error("Failed to load profile", err);
+                console.error('Failed to load profile:', err);
+                if (!auth.currentUser) {
+                    navigate('/login');
+                }
             } finally {
                 setLoading(false);
             }
         };
+
         fetchProfile();
-    }, []);
+    }, [navigate]);
 
     const handleLogout = async () => {
         try {
             await auth.signOut();
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('user');
-            navigate('/login');
         } catch (err) {
-            console.error("Logout failed", err);
-            // Force logout anyway
+            console.error('Logout error:', err);
+        } finally {
             localStorage.removeItem('authToken');
             localStorage.removeItem('user');
             navigate('/login');
@@ -70,7 +85,6 @@ const Profile = () => {
 
     return (
         <div className="home-container">
-            {/* Profile Header */}
             <div style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -79,10 +93,7 @@ const Profile = () => {
                 marginBottom: '2rem',
                 position: 'relative'
             }}>
-                <div style={{
-                    position: 'relative',
-                    marginBottom: '1rem'
-                }}>
+                <div style={{ position: 'relative', marginBottom: '1rem' }}>
                     <div style={{
                         width: '120px',
                         height: '120px',
@@ -92,17 +103,17 @@ const Profile = () => {
                         boxShadow: '0 0 40px rgba(139, 92, 246, 0.4)',
                         background: 'rgba(139, 92, 246, 0.1)'
                     }}>
-                        <img 
-                            src={profile?.avatar} 
+                        <img
+                            src={profile?.avatar}
                             alt={profile?.name}
-                            style={{
-                                width: '100%',
-                                height: '100%',
-                                objectFit: 'cover'
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            onError={(e) => {
+                                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.name || 'User')}&background=8b5cf6&color=fff&size=256`;
                             }}
                         />
                     </div>
                     <button
+                        onClick={() => navigate('/profile/edit')}
                         style={{
                             position: 'absolute',
                             bottom: '0',
@@ -124,23 +135,14 @@ const Profile = () => {
                         <Edit2 size={16} color="white" />
                     </button>
                 </div>
-                <h1 style={{
-                    fontSize: '1.75rem',
-                    fontWeight: '700',
-                    color: 'white',
-                    marginBottom: '0.25rem'
-                }}>
+                <h1 style={{ fontSize: '1.75rem', fontWeight: '700', color: 'white', marginBottom: '0.25rem' }}>
                     {profile?.name || 'User'}
                 </h1>
-                <p style={{
-                    fontSize: '0.95rem',
-                    color: '#a8a8b8'
-                }}>
+                <p style={{ fontSize: '0.95rem', color: '#a8a8b8' }}>
                     {profile?.email}
                 </p>
             </div>
 
-            {/* Menu Items */}
             <div style={{
                 background: 'rgba(255, 255, 255, 0.03)',
                 border: '1px solid rgba(139, 92, 246, 0.15)',
@@ -148,38 +150,17 @@ const Profile = () => {
                 overflow: 'hidden',
                 marginBottom: '1.5rem'
             }}>
-                <MenuItem
-                    icon={<User size={20} />}
-                    label="Edit Profile"
-                    onClick={() => navigate('/profile/edit')}
-                />
+                <MenuItem icon={<User size={20} />} label="Edit Profile" onClick={() => navigate('/profile/edit')} />
                 <Divider />
-                <MenuItem
-                    icon={<Bell size={20} />}
-                    label="Notifications"
-                    onClick={() => navigate('/notifications')}
-                />
+                <MenuItem icon={<Bell size={20} />} label="Notifications" onClick={() => navigate('/notifications')} />
                 <Divider />
-                <MenuItem
-                    icon={<Settings size={20} />}
-                    label="Settings"
-                    onClick={() => navigate('/settings')}
-                />
+                <MenuItem icon={<Settings size={20} />} label="Settings" onClick={() => navigate('/settings')} />
                 <Divider />
-                <MenuItem
-                    icon={<Shield size={20} />}
-                    label="Privacy & Security"
-                    onClick={() => navigate('/privacy')}
-                />
+                <MenuItem icon={<Shield size={20} />} label="Privacy & Security" onClick={() => navigate('/privacy')} />
                 <Divider />
-                <MenuItem
-                    icon={<HelpCircle size={20} />}
-                    label="Help & Support"
-                    onClick={() => navigate('/help')}
-                />
+                <MenuItem icon={<HelpCircle size={20} />} label="Help & Support" onClick={() => navigate('/help')} />
             </div>
 
-            {/* Logout Button */}
             <button
                 onClick={handleLogout}
                 style={{
@@ -242,11 +223,7 @@ const MenuItem = ({ icon, label, onClick }) => (
 );
 
 const Divider = () => (
-    <div style={{
-        height: '1px',
-        background: 'rgba(139, 92, 246, 0.1)',
-        margin: '0 1rem'
-    }} />
+    <div style={{ height: '1px', background: 'rgba(139, 92, 246, 0.1)', margin: '0 1rem' }} />
 );
 
 export default Profile;

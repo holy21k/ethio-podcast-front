@@ -16,7 +16,6 @@ const Search = () => {
     ]);
 
     useEffect(() => {
-        // Load recent searches from localStorage
         const saved = localStorage.getItem('recentSearches');
         if (saved) {
             setRecentSearches(JSON.parse(saved));
@@ -31,9 +30,8 @@ const Search = () => {
         
         try {
             const response = await searchPodcasts(searchQuery);
-            setResults(response.podcasts || response.data?.podcasts || response.data || []);
+            setResults(response.podcasts || response.data?.podcasts || response.data?.results || response.data || []);
             
-            // Save to recent searches
             const updated = [searchQuery, ...recentSearches.filter(s => s !== searchQuery)].slice(0, 5);
             setRecentSearches(updated);
             localStorage.setItem('recentSearches', JSON.stringify(updated));
@@ -69,7 +67,6 @@ const Search = () => {
 
     return (
         <div className="home-container">
-            {/* Search Header */}
             <div style={{
                 position: 'sticky',
                 top: 0,
@@ -153,10 +150,8 @@ const Search = () => {
                 </form>
             </div>
 
-            {/* Search Suggestions - Show when not searched */}
             {!searched && (
                 <div>
-                    {/* Recent Searches */}
                     {recentSearches.length > 0 && (
                         <div style={{ marginBottom: '2rem' }}>
                             <div style={{
@@ -166,19 +161,11 @@ const Search = () => {
                                 marginBottom: '1rem'
                             }}>
                                 <Clock size={20} color="#8b5cf6" />
-                                <h2 style={{
-                                    fontSize: '1.1rem',
-                                    fontWeight: '600',
-                                    color: 'white'
-                                }}>
+                                <h2 style={{ fontSize: '1.1rem', fontWeight: '600', color: 'white' }}>
                                     Recent Searches
                                 </h2>
                             </div>
-                            <div style={{
-                                display: 'flex',
-                                flexWrap: 'wrap',
-                                gap: '0.75rem'
-                            }}>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
                                 {recentSearches.map((search, idx) => (
                                     <div
                                         key={idx}
@@ -227,7 +214,6 @@ const Search = () => {
                         </div>
                     )}
 
-                    {/* Trending Searches */}
                     <div>
                         <div style={{
                             display: 'flex',
@@ -236,19 +222,11 @@ const Search = () => {
                             marginBottom: '1rem'
                         }}>
                             <TrendingUp size={20} color="#8b5cf6" />
-                            <h2 style={{
-                                fontSize: '1.1rem',
-                                fontWeight: '600',
-                                color: 'white'
-                            }}>
+                            <h2 style={{ fontSize: '1.1rem', fontWeight: '600', color: 'white' }}>
                                 Trending Topics
                             </h2>
                         </div>
-                        <div style={{
-                            display: 'flex',
-                            flexWrap: 'wrap',
-                            gap: '0.75rem'
-                        }}>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
                             {trendingSearches.map((trend, idx) => (
                                 <div
                                     key={idx}
@@ -281,7 +259,6 @@ const Search = () => {
                         </div>
                     </div>
 
-                    {/* Empty State */}
                     <div style={{
                         display: 'flex',
                         flexDirection: 'column',
@@ -302,7 +279,6 @@ const Search = () => {
                 </div>
             )}
 
-            {/* Loading State */}
             {loading && (
                 <div className="loading-state">
                     <div className="loading-spinner"></div>
@@ -310,7 +286,6 @@ const Search = () => {
                 </div>
             )}
 
-            {/* Search Results */}
             {searched && !loading && (
                 <>
                     <div style={{ marginBottom: '1.5rem' }}>

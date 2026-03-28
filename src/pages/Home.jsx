@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { getHomeData, getWatchlistChannels } from '../api';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { getHomeData, getWatchlistChannels, getUserProfile } from '../api';
 import { auth } from '../services/firebase';
 import PodcastCard from '../components/PodcastCard';
 import Navbar from '../components/Navbar';
@@ -9,23 +9,74 @@ import '../styles/home.css';
 
 const Home = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [data, setData] = useState({ trending: [], today: [], yesterday: [] });
     const [channels, setChannels] = useState([]);
     const [featuredIndex, setFeaturedIndex] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [user, setUser] = useState(null);
+    const [greeting, setGreeting] = useState('');
+
+    // Update greeting based on current time
+    useEffect(() => {
+        const updateGreeting = () => {
+            const hour = new Date().getHours();
+            if (hour >= 5 && hour < 12) {
+                setGreeting('Good Morning');
+            } else if (hour >= 12 && hour < 17) {
+                setGreeting('Good Afternoon');
+            } else if (hour >= 17 && hour < 22) {
+                setGreeting('Good Evening');
+            } else {
+                setGreeting('Good Night');
+            }
+        };
+
+        updateGreeting();
+        // Update greeting every minute
+        const interval = setInterval(updateGreeting, 60000);
+        return () => clearInterval(interval);
+    }, []);
+
+    // Load user profile
+    useEffect(() => {
+        const loadUserProfile = async () => {
+            const currentUser = auth.currentUser;
+            if (!currentUser) return;
+
+            // Set initial data from Firebase
+            let userData = {
+                displayName: currentUser.displayName || 'User',
+                photoURL: currentUser.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.displayName || 'User')}&background=8b5cf6&color=fff&size=128`
+            };
+
+            setUser(userData);
+
+            // Try to get updated profile from backend
+            try {
+                const response = await getUserProfile();
+                let profile = response;
+                if (response.data) profile = response.data;
+                if (response.data && response.data.profile) profile = response.data.profile;
+
+                // Update with backend data if available
+                if (profile.photoURL || profile.displayName) {
+                    userData = {
+                        displayName: profile.displayName || userData.displayName,
+                        photoURL: profile.photoURL || userData.photoURL
+                    };
+                    setUser(userData);
+                }
+            } catch (err) {
+                console.log('Backend profile not available, using Firebase data:', err.message);
+            }
+        };
+
+        loadUserProfile();
+    }, [location.pathname]); // Reload when navigating back to home
 
     useEffect(() => {
-        // Get current user from Firebase
-        const currentUser = auth.currentUser;
-        if (currentUser) {
-            setUser({
-                displayName: currentUser.displayName || 'User',
-                photoURL: currentUser.photoURL || `https://ui-avatars.com/api/?name=${currentUser.displayName || 'User'}&background=8b5cf6&color=fff&size=128`
-            });
-        }
-
         const fetchData = async () => {
             try {
                 setLoading(true);
@@ -64,10 +115,8 @@ const Home = () => {
     };
 
     const handlePlayPodcast = (podcast) => {
-        // Store current playing podcast in localStorage or context
-        localStorage.setItem('currentPodcast', JSON.stringify(podcast));
-        // Trigger audio player (we'll create this component)
-        window.dispatchEvent(new CustomEvent('playPodcast', { detail: podcast }));
+        // Navigate to podcast detail page to play
+        navigate(`/podcast/${podcast.id}`);
     };
 
     if (loading) {
@@ -103,7 +152,7 @@ const Home = () => {
                         <div className="user-profile">
                             <img src={user.photoURL} alt={user.displayName} className="user-avatar" />
                             <div>
-                                <p className="home-greeting">Good Morning !</p>
+                                <p className="home-greeting">{greeting} !</p>
                                 <h1 className="home-username">{user.displayName}</h1>
                             </div>
                         </div>
