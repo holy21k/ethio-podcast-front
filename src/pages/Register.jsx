@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { signInWithGoogle, registerWithEmail } from '../api/auth';
+import { signInWithGoogle, registerWithEmail, handleRedirectResult } from '../api/auth';
 import '../styles/login.css';
 
 const Register = () => {
@@ -11,11 +11,25 @@ const Register = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
+    // On mobile, after Google redirect brings user back to this page,
+    // getRedirectResult() picks up the result and sends them to security setup
+    useEffect(() => {
+        const checkRedirect = async () => {
+            setLoading(true);
+            const success = await handleRedirectResult();
+            if (success) navigate('/security');
+            setLoading(false);
+        };
+        checkRedirect();
+    }, []);
+
     const handleGoogleRegister = async () => {
         try {
             setLoading(true);
             setError('');
             await signInWithGoogle();
+            // Desktop: popup resolves here → navigate
+            // Mobile: page redirects → useEffect above handles navigation
             navigate('/security');
         } catch (error) {
             console.error("Google Sign-Up Error:", error);
@@ -29,7 +43,6 @@ const Register = () => {
         e.preventDefault();
         setLoading(true);
         setError('');
-
         try {
             await registerWithEmail(email, password, name);
             navigate('/security');
@@ -60,9 +73,9 @@ const Register = () => {
                     className="auth-google-btn"
                     disabled={loading}
                 >
-                    <img 
-                        src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" 
-                        alt="Google" 
+                    <img
+                        src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                        alt="Google"
                         className="google-icon"
                     />
                     Continue with Google
@@ -81,7 +94,6 @@ const Register = () => {
                         onChange={(e) => setName(e.target.value)}
                         required
                     />
-
                     <input
                         type="email"
                         className="auth-input"
@@ -90,7 +102,6 @@ const Register = () => {
                         onChange={(e) => setEmail(e.target.value)}
                         required
                     />
-
                     <input
                         type="password"
                         className="auth-input"
@@ -99,7 +110,6 @@ const Register = () => {
                         onChange={(e) => setPassword(e.target.value)}
                         required
                     />
-
                     <button type="submit" className="auth-submit-btn" disabled={loading}>
                         {loading ? 'Creating Account...' : 'Sign up'}
                     </button>

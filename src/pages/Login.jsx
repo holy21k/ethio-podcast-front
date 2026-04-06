@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { signInWithGoogle } from '../api/auth';
+import { signInWithGoogle, signInWithEmail, handleRedirectResult } from '../api/auth';
 import '../styles/login.css';
 
 const Login = () => {
@@ -10,11 +10,25 @@ const Login = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
+    // On mobile, after Google redirect brings user back to this page,
+    // getRedirectResult() picks up the result and logs them in
+    useEffect(() => {
+        const checkRedirect = async () => {
+            setLoading(true);
+            const success = await handleRedirectResult();
+            if (success) navigate('/home');
+            setLoading(false);
+        };
+        checkRedirect();
+    }, []);
+
     const handleGoogleLogin = async () => {
         try {
             setLoading(true);
             setError('');
             await signInWithGoogle();
+            // Desktop: popup resolves here → navigate
+            // Mobile: page redirects → useEffect above handles navigation
             navigate('/home');
         } catch (error) {
             console.error("Google Sign-In Error:", error);
@@ -28,10 +42,7 @@ const Login = () => {
         e.preventDefault();
         setLoading(true);
         setError('');
-
         try {
-            // Import signInWithEmail from auth API
-            const { signInWithEmail } = await import('../api/auth');
             await signInWithEmail(email, password);
             navigate('/home');
         } catch (err) {
@@ -61,9 +72,9 @@ const Login = () => {
                     className="auth-google-btn"
                     disabled={loading}
                 >
-                    <img 
-                        src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" 
-                        alt="Google" 
+                    <img
+                        src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                        alt="Google"
                         className="google-icon"
                     />
                     Continue with Google
@@ -82,7 +93,6 @@ const Login = () => {
                         onChange={(e) => setEmail(e.target.value)}
                         required
                     />
-
                     <input
                         type="password"
                         className="auth-input"
@@ -91,7 +101,6 @@ const Login = () => {
                         onChange={(e) => setPassword(e.target.value)}
                         required
                     />
-
                     <button type="submit" className="auth-submit-btn" disabled={loading}>
                         {loading ? 'Signing In...' : 'Sign in'}
                     </button>
