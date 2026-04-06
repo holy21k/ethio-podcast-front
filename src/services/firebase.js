@@ -16,3 +16,20 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 export const storage = getStorage(app);
+
+// Detects mobile/tablet across ALL browsers — Chrome, Firefox, Edge, Safari, Opera
+export const isMobile = () => {
+    // Check 1: Common mobile/tablet user agents — Android, iOS, Opera Mini, IE Mobile
+    const mobileUA = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+
+    // Check 2: Chrome Mobile, Firefox Mobile, Edge Mobile all include "Mobile" or "Tablet"
+    const mobileBrowser = /Mobile|Tablet/i.test(navigator.userAgent);
+
+    // Check 3: Screen width fallback — catches any browser on a small screen
+    const smallScreen = window.innerWidth <= 768;
+
+    // Check 4: Touch-only device with no fine pointer (mouse) — strong signal it's mobile/tablet
+    const touchOnly = navigator.maxTouchPoints > 1 && !window.matchMedia('(pointer: fine)').matches;
+
+    return mobileUA || mobileBrowser || smallScreen || touchOnly;
+};

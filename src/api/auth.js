@@ -1,7 +1,9 @@
 import api from './config';
-import { auth, googleProvider } from '../services/firebase';
+import { auth, googleProvider, isMobile } from '../services/firebase';
 import {
     signInWithPopup,
+    signInWithRedirect,
+    getRedirectResult,
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
     updateProfile,
@@ -11,14 +13,38 @@ import {
 
 export const signInWithGoogle = async () => {
     try {
-        const result = await signInWithPopup(auth, googleProvider);
-        const idToken = await result.user.getIdToken();
-        localStorage.setItem('authToken', idToken);
-        const response = await api.get('/auth/login');
-        return response.data;
+        if (isMobile()) {
+            // Mobile/tablet: redirect flow (popup is blocked by all mobile browsers)
+            await signInWithRedirect(auth, googleProvider);
+            return; // page reloads — result is handled by handleRedirectResult()
+        } else {
+            // Desktop: popup works on Chrome, Firefox, Edge, Safari, Opera
+            const result = await signInWithPopup(auth, googleProvider);
+            const idToken = await result.user.getIdToken();
+            localStorage.setItem('authToken', idToken);
+            const response = await api.get('/auth/login');
+            return response.data;
+        }
     } catch (error) {
         console.error('Google sign-in error:', error);
         throw error;
+    }
+};
+
+// Call this once on Login and Register page mount to catch the redirect result on mobile
+export const handleRedirectResult = async () => {
+    try {
+        const result = await getRedirectResult(auth);
+        if (result) {
+            const idToken = await result.user.getIdToken();
+            localStorage.setItem('authToken', idToken);
+            await api.get('/auth/login');
+            return true; // signals redirect login succeeded → navigate away
+        }
+        return false;
+    } catch (error) {
+        console.error('Redirect result error:', error);
+        return false;
     }
 };
 
@@ -67,7 +93,6 @@ export const getCurrentUser = async () => {
     return response.data;
 };
 
-// Firebase Client SDK handles this directly — no backend needed
 export const sendPasswordResetEmail = async (email) => {
     try {
         await firebaseSendPasswordResetEmail(auth, email);
@@ -87,7 +112,6 @@ export const isAuthenticated = () => {
     return !!localStorage.getItem('authToken') && !!auth.currentUser;
 };
 
-// File → base64 → POST to backend → backend uploads to Supabase → returns public URL
 export const uploadProfilePhoto = async (file) => {
     return new Promise((resolve, reject) => {
         if (!file.type.startsWith('image/')) {
