@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Clock, Calendar, User, Play, Bookmark, Share2 } from 'lucide-react';
 import { getPodcastById } from '../api';
-import { addToWatchlist, addToHistory } from '../api';
 import AudioPlayer from '../components/AudioPlayer';
 import Navbar from '../components/Navbar';
 import '../styles/podcast-detail.css';
@@ -12,7 +11,10 @@ const PodcastDetail = () => {
     const navigate = useNavigate();
     const [podcast, setPodcast] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [isInWatchlist, setIsInWatchlist] = useState(false);
+    const [isInWatchlist, setIsInWatchlist] = useState(() => {
+        const watchlist = JSON.parse(localStorage.getItem('watchlist') || '[]');
+        return watchlist.some(w => w.id === id);
+    });
 
     useEffect(() => {
         const fetchPodcast = async () => {
@@ -34,16 +36,22 @@ const PodcastDetail = () => {
 
     useEffect(() => {
         if (id && podcast) {
-            addToHistory(id, podcast).catch(console.error);
+            const history = JSON.parse(localStorage.getItem('history') || '[]');
+            const exists = history.find(h => (h.id || h) === id);
+            if (!exists) {
+                history.unshift({ ...podcast, id });
+                localStorage.setItem('history', JSON.stringify(history.slice(0, 50)));
+            }
         }
     }, [id, podcast]);
 
-    const handleAddToWatchlist = async () => {
-        try {
-            await addToWatchlist(id, podcast);
+    const handleAddToWatchlist = () => {
+        const watchlist = JSON.parse(localStorage.getItem('watchlist') || '[]');
+        const exists = watchlist.find(w => (w.id || w) === id);
+        if (!exists) {
+            watchlist.unshift({ ...podcast, id });
+            localStorage.setItem('watchlist', JSON.stringify(watchlist));
             setIsInWatchlist(true);
-        } catch (err) {
-            console.error("Failed to add to watchlist", err);
         }
     };
 

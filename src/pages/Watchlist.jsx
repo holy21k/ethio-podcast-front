@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Bookmark, Grid, List } from 'lucide-react';
-import { getWatchlist } from '../api';
+
 import PodcastCard from '../components/PodcastCard';
 import Navbar from '../components/Navbar';
 import '../styles/home.css';
@@ -12,19 +12,9 @@ const Watchlist = () => {
     const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
 
     useEffect(() => {
-        const fetchWatchlist = async () => {
-            try {
-                setLoading(true);
-                const response = await getWatchlist();
-                setWatchlist(response.watchlist || response.data?.watchlist || []);
-            } catch (err) {
-                console.error("Failed to load watchlist", err);
-                setError("Could not load your watchlist.");
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchWatchlist();
+        const saved = JSON.parse(localStorage.getItem('watchlist') || '[]');
+        setWatchlist(saved);
+        setLoading(false);
     }, []);
 
     if (loading) {

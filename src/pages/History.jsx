@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Clock, Trash2 } from 'lucide-react';
-import { getHistory, clearHistory as clearHistoryAPI } from '../api';
+
 import PodcastCard from '../components/PodcastCard';
 import Navbar from '../components/Navbar';
 import '../styles/home.css';
@@ -11,31 +11,15 @@ const History = () => {
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        const fetchHistory = async () => {
-            try {
-                setLoading(true);
-                const response = await getHistory();
-                setHistory(response.history || response.data?.history || []);
-            } catch (err) {
-                console.error("Failed to load history", err);
-                setError("Could not load your listening history.");
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchHistory();
+        const saved = JSON.parse(localStorage.getItem('history') || '[]');
+        setHistory(saved);
+        setLoading(false);
     }, []);
 
-    const handleClearHistory = async () => {
-        if (!window.confirm('Are you sure you want to clear your listening history?')) {
-            return;
-        }
-        try {
-            await clearHistoryAPI();
-            setHistory([]);
-        } catch (err) {
-            console.error("Failed to clear history", err);
-        }
+    const handleClearHistory = () => {
+        if (!window.confirm('Are you sure you want to clear your listening history?')) return;
+        localStorage.removeItem('history');
+        setHistory([]);
     };
 
     if (loading) {

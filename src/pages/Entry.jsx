@@ -8,7 +8,7 @@ const Entry = () => {
         <div className="entry-container">
             <div className="entry-header">
                 <span className="entry-logo">EthioPodcast</span>
-                <button className="entry-skip" onClick={() => navigate('/login')}>
+                <button className="entry-skip" onClick={() => navigate('/home')}>
                     Skip
                 </button>
             </div>

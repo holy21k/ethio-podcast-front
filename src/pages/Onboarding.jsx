@@ -28,7 +28,7 @@ const Onboarding = () => {
         if (currentStep < onboardingData.length - 1) {
             setCurrentStep(prev => prev + 1);
         } else {
-            navigate('/login');
+            navigate('/home');
         }
     };
 

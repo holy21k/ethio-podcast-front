@@ -1,80 +1,18 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { getHomeData, getWatchlistChannels, getUserProfile } from '../api';
-import { auth } from '../services/firebase';
+import { useNavigate } from 'react-router-dom';
+import { getHomeData, getWatchlistChannels } from '../api';
 import PodcastCard from '../components/PodcastCard';
 import Navbar from '../components/Navbar';
-import { Bell, Play, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Play, ChevronLeft, ChevronRight } from 'lucide-react';
 import '../styles/home.css';
 
 const Home = () => {
     const navigate = useNavigate();
-    const location = useLocation();
     const [data, setData] = useState({ trending: [], today: [], yesterday: [] });
     const [channels, setChannels] = useState([]);
     const [featuredIndex, setFeaturedIndex] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [user, setUser] = useState(null);
-    const [greeting, setGreeting] = useState('');
-
-    // Update greeting based on current time
-    useEffect(() => {
-        const updateGreeting = () => {
-            const hour = new Date().getHours();
-            if (hour >= 5 && hour < 12) {
-                setGreeting('Good Morning');
-            } else if (hour >= 12 && hour < 17) {
-                setGreeting('Good Afternoon');
-            } else if (hour >= 17 && hour < 22) {
-                setGreeting('Good Evening');
-            } else {
-                setGreeting('Good Night');
-            }
-        };
-
-        updateGreeting();
-        // Update greeting every minute
-        const interval = setInterval(updateGreeting, 60000);
-        return () => clearInterval(interval);
-    }, []);
-
-    // Load user profile
-    useEffect(() => {
-        const loadUserProfile = async () => {
-            const currentUser = auth.currentUser;
-            if (!currentUser) return;
-
-            // Set initial data from Firebase
-            let userData = {
-                displayName: currentUser.displayName || 'User',
-                photoURL: currentUser.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.displayName || 'User')}&background=8b5cf6&color=fff&size=128`
-            };
-
-            setUser(userData);
-
-            // Try to get updated profile from backend
-            try {
-                const response = await getUserProfile();
-                let profile = response;
-                if (response.data) profile = response.data;
-                if (response.data && response.data.profile) profile = response.data.profile;
-
-                // Update with backend data if available
-                if (profile.photoURL || profile.displayName) {
-                    userData = {
-                        displayName: profile.displayName || userData.displayName,
-                        photoURL: profile.photoURL || userData.photoURL
-                    };
-                    setUser(userData);
-                }
-            } catch (err) {
-                console.log('Backend profile not available, using Firebase data:', err.message);
-            }
-        };
-
-        loadUserProfile();
-    }, [location.pathname]); // Reload when navigating back to home
 
     useEffect(() => {
         const fetchData = async () => {
@@ -90,7 +28,7 @@ const Home = () => {
                     today: homeResponse.data.recent_today || [],
                     yesterday: homeResponse.data.recent_yesterday || []
                 });
-                
+
                 setChannels(channelsResponse.data.channels || []);
             } catch (err) {
                 console.error("Failed to fetch home data:", err);
@@ -115,7 +53,6 @@ const Home = () => {
     };
 
     const handlePlayPodcast = (podcast) => {
-        // Navigate to podcast detail page to play
         navigate(`/podcast/${podcast.id}`);
     };
 
@@ -145,26 +82,6 @@ const Home = () => {
 
     return (
         <div className="home-container">
-            {/* Header */}
-            <div className="home-header">
-                <div className="home-header-left">
-                    {user && (
-                        <div className="user-profile">
-                            <img src={user.photoURL} alt={user.displayName} className="user-avatar" />
-                            <div>
-                                <p className="home-greeting">{greeting} !</p>
-                                <h1 className="home-username">{user.displayName}</h1>
-                            </div>
-                        </div>
-                    )}
-                </div>
-                <div className="home-header-right">
-                    <button className="icon-btn" onClick={() => navigate('/notifications')}>
-                        <Bell size={22} />
-                    </button>
-                </div>
-            </div>
-
             {/* Featured Hero Section */}
             {currentFeatured && (
                 <div className="hero-section">
@@ -183,8 +100,8 @@ const Home = () => {
                                 </div>
                             ))}
                         </div>
-                        <button 
-                            className="hero-play-btn" 
+                        <button
+                            className="hero-play-btn"
                             onClick={() => handlePlayPodcast(currentFeatured)}
                         >
                             <div className="hero-play-icon">
@@ -232,9 +149,9 @@ const Home = () => {
                 </div>
                 <div className="podcast-list">
                     {data.trending.slice(0, 6).map(podcast => (
-                        <PodcastCard 
-                            key={podcast.id} 
-                            podcast={podcast} 
+                        <PodcastCard
+                            key={podcast.id}
+                            podcast={podcast}
                             variant="list"
                             onPlay={() => handlePlayPodcast(podcast)}
                         />
@@ -248,4 +165,3 @@ const Home = () => {
 };
 
 export default Home;
-

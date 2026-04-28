@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Settings as SettingsIcon, ArrowLeft, Save } from 'lucide-react';
-import { getUserSettings, updateUserSettings } from '../api';
+
 import Navbar from '../components/Navbar';
 import '../styles/home.css';
 
@@ -22,21 +22,16 @@ const Settings = () => {
         loadSettings();
     }, []);
 
-    const loadSettings = async () => {
+    const loadSettings = () => {
         try {
-            const response = await getUserSettings();
-            const settingsData =
-                response?.data?.settings ||
-                response?.data ||
-                response;
-
+            const saved = JSON.parse(localStorage.getItem('appSettings') || '{}');
             setSettings({
-                language: settingsData.language || 'en',
-                theme: settingsData.theme || 'dark',
-                autoplay: settingsData.autoplay !== false,
-                playbackSpeed: settingsData.playbackSpeed || 1.0,
-                quality: settingsData.quality || 'auto',
-                dataUsage: settingsData.dataUsage || 'standard'
+                language: saved.language || 'en',
+                theme: saved.theme || 'dark',
+                autoplay: saved.autoplay !== false,
+                playbackSpeed: saved.playbackSpeed || 1.0,
+                quality: saved.quality || 'auto',
+                dataUsage: saved.dataUsage || 'standard'
             });
         } catch (error) {
             console.error('Error loading settings:', error);
@@ -45,10 +40,10 @@ const Settings = () => {
         }
     };
 
-    const handleSave = async () => {
+    const handleSave = () => {
         try {
             setSaving(true);
-            await updateUserSettings(settings);
+            localStorage.setItem('appSettings', JSON.stringify(settings));
             alert('Settings saved successfully!');
         } catch (error) {
             console.error('Error saving settings:', error);

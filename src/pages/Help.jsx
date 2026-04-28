@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { HelpCircle, ArrowLeft, ChevronDown, ChevronUp, Send, MessageSquare } from 'lucide-react';
-import { getFAQ, submitSupportRequest, getSupportTickets, getAppInfo } from '../api';
+
 import Navbar from '../components/Navbar';
 import '../styles/home.css';
 
@@ -24,63 +24,22 @@ const Help = () => {
         loadData();
     }, []);
 
-    const loadData = async () => {
-        try {
-            const [faqData, appData] = await Promise.all([
-                getFAQ().catch(() => ({ data: { faq: [] } })),
-                getAppInfo().catch(() => ({ data: { about: null } }))
-            ]);
-
-            // Handle FAQ response
-            let faqList = [];
-            if (faqData.data && faqData.data.faq) {
-                faqList = faqData.data.faq;
-            } else if (Array.isArray(faqData)) {
-                faqList = faqData;
-            }
-            setFaq(faqList);
-
-            // Handle app info response
-            let info = appData;
-            if (appData.data) info = appData.data;
-            if (appData.data && appData.data.about) info = appData.data.about;
-            setAppInfo(info);
-
-            // Try to load tickets (requires auth)
-            try {
-                const ticketsData = await getSupportTickets();
-                let ticketList = [];
-                if (ticketsData.data && ticketsData.data.tickets) {
-                    ticketList = ticketsData.data.tickets;
-                } else if (Array.isArray(ticketsData)) {
-                    ticketList = ticketsData;
-                }
-                setTickets(ticketList);
-            } catch (err) {
-                console.log('Could not load tickets (user may not be logged in)');
-            }
-        } catch (error) {
-            console.error('Error loading help data:', error);
-        } finally {
-            setLoading(false);
-        }
+    const loadData = () => {
+        setFaq([
+            { id: 1, question: 'How do I search for podcasts?', answer: 'Use the Search tab at the bottom to find podcasts by title or author.' },
+            { id: 2, question: 'How do I save a podcast?', answer: 'Tap the bookmark icon on any podcast to save it to your Library.' },
+            { id: 3, question: 'How do I change playback speed?', answer: 'Go to Settings and adjust the Playback Speed option.' },
+            { id: 4, question: 'Where can I find my listening history?', answer: 'Your listening history is available in the History section from the navigation bar.' },
+        ]);
+        setAppInfo({ appName: 'EthioPodcast', version: '2.0.0' });
+        setLoading(false);
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
-        try {
-            setSubmitting(true);
-            await submitSupportRequest(formData);
-            alert('Support request submitted successfully!');
-            setFormData({ subject: '', message: '', category: 'general' });
-            setShowContactForm(false);
-            loadData(); // Reload to show new ticket
-        } catch (error) {
-            console.error('Error submitting request:', error);
-            alert('Failed to submit request. Please try again.');
-        } finally {
-            setSubmitting(false);
-        }
+        alert('Support request submitted successfully!');
+        setFormData({ subject: '', message: '', category: 'general' });
+        setShowContactForm(false);
     };
 
     if (loading) {

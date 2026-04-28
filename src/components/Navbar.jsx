@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, Compass, Search, Heart, User } from 'lucide-react';
+import { Home, Compass, Search, Heart } from 'lucide-react';
 import '../styles/navbar.css';
 
 const Navbar = () => {
@@ -24,11 +24,6 @@ const Navbar = () => {
       <NavLink to="/watchlist" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
         <Heart size={24} />
         <span>Watchlist</span>
-      </NavLink>
-
-      <NavLink to="/profile" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-        <User size={24} />
-        <span>Profile</span>
       </NavLink>
     </nav>
   );
